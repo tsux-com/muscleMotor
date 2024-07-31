@@ -2,6 +2,43 @@ import serial
 import time
 import threading
 
+
+import os
+from typing import Any, Dict, List
+
+import os
+
+# AISearchに繋げる
+
+os.environ["AZURE_OPENAI_API_VERSION"] = "あなたのAPIバージョン"
+os.environ["OPENAI_DEPLOYMENT_ID"] = "あなたのデプロイメントID"
+os.environ["SCRAPEGRAPHAI_MODEL"] = "あなたのモデル"
+os.environ["AZURE_OPENAI_API_KEY"] = "あなたのAPIキー"
+
+
+openai_key = os.getenv("AZURE_OPENAI_API_KEY")
+graph_config = {
+    "llm": {
+        "openai_api_version": os.environ["AZURE_OPENAI_API_VERSION"],
+        "deployment_name": os.environ["OPENAI_DEPLOYMENT_ID"],
+        "model": os.environ["SCRAPEGRAPHAI_MODEL"],
+        "temperature": 0,
+        "openai_api_key": openai_key
+    },
+}
+
+
+def update_prompt(condition: List[Dict[str, Any]], additional_data: Dict[str, Any]) -> None:
+    """命令文を入れる
+    """
+    for item in condition:
+        for k, v in additional_data.items():
+            print("k", k, "v", v)
+            if f"${{{k}}}" in item["prompt"]:
+                item["prompt"] = item["prompt"].replace(
+                    f"${{{k}}}", v)  # will change value inside condition
+
+
 # シリアルポートの設定
 ser = serial.Serial(
     port='COM3',       # 使用するポート（例: COM3）
