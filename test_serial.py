@@ -7,8 +7,7 @@ import re
 endpoint = "https://musclemotor.openai.azure.com/"
 
 # OpenAI APIキー
-api_key = os.getenv('AZURE_SEARCH_ADMIN_KEY')
-# ここに取得したAPIキーを設定
+# api_key = ""  # ここに取得したAPIキーを設定
 
 # OpenAIクライアントの初期化
 client = AzureOpenAI(
@@ -48,7 +47,7 @@ completion = client.chat.completions.create(
                 "top_n_documents": 5,
                 "authentication": {
                     "type": "api_key",
-                    "key": ""
+                    "key": ""  # キーを入れる
                 }
             }
         }]

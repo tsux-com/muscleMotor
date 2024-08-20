@@ -6,37 +6,74 @@ import threading
 import os
 from typing import Any, Dict, List
 
-import os
+import json
+from openai import AzureOpenAI
+import re
 
-# AISearchに繋げる
+# Azure OpenAI サービスのエンドポイント
+endpoint = "https://musclemotor.openai.azure.com/"
 
-os.environ["AZURE_OPENAI_API_VERSION"] = "あなたのAPIバージョン"
-os.environ["OPENAI_DEPLOYMENT_ID"] = "あなたのデプロイメントID"
-os.environ["SCRAPEGRAPHAI_MODEL"] = "あなたのモデル"
-os.environ["AZURE_OPENAI_API_KEY"] = "あなたのAPIキー"
+# OpenAI APIキー
+# api_key = ""  # ここに取得したAPIキーを設定
 
+# OpenAIクライアントの初期化
+client = AzureOpenAI(
+    azure_endpoint=endpoint,
+    # api_key=api_key,  # APIキーを設定
+    api_version="2024-05-01-preview",
+)
 
-openai_key = os.getenv("AZURE_OPENAI_API_KEY")
-graph_config = {
-    "llm": {
-        "openai_api_version": os.environ["AZURE_OPENAI_API_VERSION"],
-        "deployment_name": os.environ["OPENAI_DEPLOYMENT_ID"],
-        "model": os.environ["SCRAPEGRAPHAI_MODEL"],
-        "temperature": 0,
-        "openai_api_key": openai_key
-    },
-}
+completion = client.chat.completions.create(
+    model="gpt-35-turbo",
+    messages=[
+        {
+            "role": "user",
+            "content": "yamaguti.txtの内容は？"
+        }
+    ],
+    max_tokens=800,
+    temperature=0.7,
+    top_p=0.95,
+    frequency_penalty=0,
+    presence_penalty=0,
+    stop=None,
+    stream=False,
+    extra_body={
+        "data_sources": [{
+            "type": "azure_search",
+            "parameters": {
+                "endpoint": "https://musclemotor.search.windows.net",
+                "index_name": "vector-1723096776192",
+                "semantic_configuration": "vector-1723096776192-semantic-configuration",
+                "query_type": "semantic",
+                "fields_mapping": {},
+                "in_scope": True,
+                "role_information": "You are an AI assistant that helps people find information.",
+                "filter": None,
+                "strictness": 3,
+                "top_n_documents": 5,
+                "authentication": {
+                    "type": "api_key",
+                    "key": ""  # キーを入れる
+                }
+            }
+        }]
+    }
+)
 
+# JSONレスポンスを取得
+response_json = completion.to_json()
 
-def update_prompt(condition: List[Dict[str, Any]], additional_data: Dict[str, Any]) -> None:
-    """命令文を入れる
-    """
-    for item in condition:
-        for k, v in additional_data.items():
-            print("k", k, "v", v)
-            if f"${{{k}}}" in item["prompt"]:
-                item["prompt"] = item["prompt"].replace(
-                    f"${{{k}}}", v)  # will change value inside condition
+# レスポンスから "content" の部分を取り出す
+response_data = json.loads(response_json)
+content = response_data["choices"][0]["message"]["content"]
+
+# 文字列として表現されている辞書を正規表現で抽出
+matches = re.findall(r"{'commands': \['[^\]]+'], 'wait': \d+}", content)
+
+# 抽出された内容を表示
+for match in matches:
+    print(match)
 
 
 # シリアルポートの設定
@@ -47,13 +84,7 @@ ser = serial.Serial(
 )
 
 commands1 = [
-    {'commands': ['speed=1', 'power=1', 'InchingjogSpeed=80',
-                  'InchingFeedAmount=200'], 'wait': 1},
-    {'commands': ['motionstart'], 'wait': 3},
-    {'commands': ['stop'], 'wait': 2},
-    {'commands': ['speed=10', 'power=5', 'InchingjogSpeed=100'], 'wait': 1},
-    {'commands': ['motionstart'], 'wait': 4},
-    {'commands': ['stop'], 'wait': 2},
+    match
 ]
 
 # 変換のルールを定義します
