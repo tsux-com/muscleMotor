@@ -1,11 +1,8 @@
 import serial
 import time
 import threading
-
-
 import os
 from typing import Any, Dict, List
-
 import json
 from openai import AzureOpenAI
 import re
@@ -14,7 +11,7 @@ import re
 endpoint = "https://musclemotor.openai.azure.com/"
 
 # OpenAI APIキー
-# api_key = ""  # ここに取得したAPIキーを設定
+# api_key = "d45cfbd029ea4670923625fc7df96b27"  # ここに取得したAPIキーを設定
 
 # OpenAIクライアントの初期化
 client = AzureOpenAI(
@@ -54,7 +51,7 @@ completion = client.chat.completions.create(
                 "top_n_documents": 5,
                 "authentication": {
                     "type": "api_key",
-                    "key": ""  # キーを入れる
+                    "key": ""
                 }
             }
         }]
@@ -71,10 +68,12 @@ content = response_data["choices"][0]["message"]["content"]
 # 文字列として表現されている辞書を正規表現で抽出
 matches = re.findall(r"{'commands': \['[^\]]+'], 'wait': \d+}", content)
 
-# 抽出された内容を表示
+# 抽出された内容を辞書形式に変換
+commands1 = []
 for match in matches:
-    print(match)
-
+    # 辞書形式の文字列を Python 辞書に変換
+    command_dict = eval(match)
+    commands1.append(command_dict)
 
 # シリアルポートの設定
 ser = serial.Serial(
@@ -82,10 +81,6 @@ ser = serial.Serial(
     baudrate=38400,    # ボーレート（例: 38400）
     timeout=3          # タイムアウト（秒）
 )
-
-commands1 = [
-    match
-]
 
 # 変換のルールを定義します
 conversion_rules = {
@@ -117,6 +112,7 @@ def convert_commands(data, rules):
     return converted_data
 
 
+# コマンドを変換して送信データを作成
 send_data = convert_commands(commands1, conversion_rules)
 
 print(send_data)
