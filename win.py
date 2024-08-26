@@ -16,7 +16,7 @@ endpoint = "https://musclemotor.openai.azure.com/"
 # OpenAIクライアントの初期化
 client = AzureOpenAI(
     azure_endpoint=endpoint,
-    #  api_key=api_key,  # APIキーを設定
+    #    api_key=api_key,  # APIキーを設定
     api_version="2024-05-01-preview",
 )
 

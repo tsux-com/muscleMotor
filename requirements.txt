@@ -1,1 +1,3 @@
 pip install requests
+pip install openai
+pip install --upgrade openai
