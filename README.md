@@ -23,3 +23,13 @@ source myenv/bin/activate
 作業が終了したら、仮想環境を非アクティベートすることができます。
 
 deactivate
+
+# Raspberry Pi の場合
+
+serial_communication.py を実行してください。
+
+python3 serial_communication.py
+
+# Windows の場合
+
+win.py を実行してください。
