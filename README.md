@@ -62,3 +62,7 @@ Windows デフォルト
 Raspberry Pi (USB 接続)
 
     port='/dev/ttyUSB0
+
+# 無限ループについて
+
+エンターキーで停止します。

@@ -1,3 +1,5 @@
+pip install serial
 pip install requests
 pip install openai
 pip install --upgrade openai
+pip install pyserial
