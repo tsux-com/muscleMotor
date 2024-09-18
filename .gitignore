@@ -1542,3 +1542,5 @@ myenv/Scripts/pyserial-miniterm.exe
 myenv/Scripts/pyserial-ports.exe
 myenv/Scripts/python.exe
 myenv/Scripts/pythonw.exe
+.env
+log
