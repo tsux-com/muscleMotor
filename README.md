@@ -66,3 +66,17 @@ Raspberry Pi (USB 接続)
 # 無限ループについて
 
 エンターキーで停止します。
+
+# .env 情報
+
+    OPEN_API_KEY=""
+    AUTHENTICATION_API_KEY=""
+
+
+    # シリアルポート設定
+
+    #win
+    PORT="COM3"
+
+    #Linux
+    # PORT='/dev/ttyUSB0'
