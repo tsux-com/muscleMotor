@@ -84,7 +84,6 @@ completion = client.chat.completions.create(
 )
 
 message = f"{get_current_timestamp()} ChatGPT: {ChatGPT}"
-print(message)
 with open(get_log_file_path(), 'a') as log_file:
     log_file.write(message + "\n")
 
@@ -153,6 +152,7 @@ ser = serial.Serial(
     timeout=3          # タイムアウト（秒）
 )
 
+
 # 変換のルールを定義します
 conversion_rules = {
     'motionstart': '^',
@@ -167,6 +167,8 @@ conversion_rules = {
 
 # ここでser_lockを定義します（スレッド間のシリアルポート操作をロック）
 ser_lock = threading.Lock()
+
+# データを変換する関数を定義します
 
 
 def convert_commands(data, rules):
@@ -191,8 +193,28 @@ pause_flag = False  # コマンド送信の一時停止フラグ
 
 last_sent_data = None  # 最後に送信されたデータを保持する変数
 
+# 日付と時刻を取得してフォーマットする関数
+
+
+def get_current_timestamp():
+    return datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+
+# 日付ごとのログファイルパスを取得する関数
+
+
+def get_log_file_path():
+    current_date = datetime.now().strftime('%Y-%m-%d')  # 現在の日付を取得してフォーマット
+    log_dir = 'log'
+
+    # ディレクトリが存在しない場合は作成
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    log_file_name = f"serial_communication_log_{current_date}.txt"
+    return os.path.join(log_dir, log_file_name)
 
 # データを送信する関数
+
 
 def send_data_thread(send_data):
     global stop_flag, pause_flag, last_sent_data
@@ -251,7 +273,7 @@ def send_data_thread(send_data):
                                 # 送信データをログに記録
                                 with open(get_log_file_path(), 'a') as log_file:
                                     log_file.write(
-                                        f"{get_current_timestamp()} 送信データ : {send_bytes.decode('utf-8')}\n")
+                                        f"{get_current_timestamp()} 送信データ ): {send_bytes.decode('utf-8')}\n")
                                     log_file.flush()  # バッファをフラッシュしてデータを書き込む
                         time.sleep(data['wait'])
             loop_count += 1  # ループカウントを増加
