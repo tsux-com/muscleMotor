@@ -8,6 +8,8 @@ from openai import AzureOpenAI
 import re
 from dotenv import load_dotenv
 from datetime import datetime  # 日付と時刻を取得するために追加
+import ast  # 安全に文字列を辞書に変換するために追加
+
 
 # .envファイルの内容を読み込見込む
 load_dotenv()
@@ -16,16 +18,12 @@ load_dotenv()
 
 
 def get_log_file_path():
-    current_date = datetime.now().strftime('%Y-%m-%d')  # 現在の日付を取得してフォーマット
+    current_date = datetime.now().strftime('%Y-%m-%d')
     log_dir = 'log'
-
-    # ディレクトリが存在しない場合は作成
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
-
     log_file_name = f"serial_communication_log_{current_date}.txt"
     return os.path.join(log_dir, log_file_name)
-
 
 # 日付と時刻を取得してフォーマットする関数
 
@@ -36,18 +34,16 @@ def get_current_timestamp():
 
 # Azure OpenAI サービスのエンドポイント
 endpoint = "https://musclemotor.openai.azure.com/"
-
-# OpenAI APIキー
-api_key = os.environ['OPEN_API_KEY']  # ここに取得したAPIキーを設定
+api_key = os.environ['OPEN_API_KEY']
 
 # OpenAIクライアントの初期化
 client = AzureOpenAI(
     azure_endpoint=endpoint,
-    api_key=api_key,  # APIキーを設定
+    api_key=api_key,
     api_version="2024-05-01-preview",
 )
 
-ChatGPT = "yamaguti.txtというファイルの内容を調べてください。"
+ChatGPT = "菱六の味噌作りレシピに記載されているモータ動作パラメータだけを抜き出してください"
 
 completion = client.chat.completions.create(
     model="gpt-35-turbo",
@@ -89,27 +85,66 @@ completion = client.chat.completions.create(
 
 message = f"{get_current_timestamp()} ChatGPT: {ChatGPT}"
 print(message)
-# エラーメッセージをログに記録
 with open(get_log_file_path(), 'a') as log_file:
     log_file.write(message + "\n")
 
-
 # JSONレスポンスを取得
 response_json = completion.to_json()
-
-# レスポンスから "content" の部分を取り出す
 response_data = json.loads(response_json)
+
+# レスポンス全体を確認
+print("レスポンス内容:", response_data)
+
+# レスポンスから "content" と引用されたコンテンツの部分を取り出す
 content = response_data["choices"][0]["message"]["content"]
+citations = response_data["choices"][0]["message"]["context"]["citations"]
+print("抽出された content:", content)
 
-# 文字列として表現されている辞書を正規表現で抽出
-matches = re.findall(r"{'commands': \['[^\]]+'], 'wait': \d+}", content)
-
-# 抽出された内容を辞書形式に変換
+# 引用されたコンテンツの確認
 commands1 = []
-for match in matches:
-    # 辞書形式の文字列を Python 辞書に変換
-    command_dict = eval(match)
-    commands1.append(command_dict)
+if citations:
+    citation_content = citations[0]["content"]
+    print("引用されたコンテンツ:", citation_content)
+
+    # 引用されたコンテンツから動作パラメータリストを抽出（改良された正規表現）
+    list_matches = re.findall(
+        r"\{['\"]commands['\"]: \[.*?\], ['\"]wait['\"]: \d+\}", citation_content, re.DOTALL)
+
+    if list_matches:
+        try:
+            # 抽出したリスト文字列を整形し、各項目を辞書に変換
+            for match in list_matches:
+                print("見つかったパラメータ辞書文字列:", match)
+                command_dict = ast.literal_eval(match)
+                commands1.append(command_dict)
+        except Exception as e:
+            print(f"Error parsing motor parameters: {e}")
+    else:
+        print("パラメータリストの抽出に失敗しました。")
+
+# 抽出されたパラメータを表示
+print("commands1:", commands1)
+
+# パラメータが存在しない場合の処理
+if not commands1:
+    # 引用されたコンテンツ内の `wait` 時間を含む全てのパラメータを抽出
+    parameter_matches = re.findall(
+        r"(speed=\d+|power=\d+|InchingjogSpeed=\d+|InchingFeedAmount=\d+|wait=\d+)", citation_content)
+    print("抽出されたパラメータ:", parameter_matches)
+
+    # パラメータを辞書形式にしてcommands1に追加
+    if parameter_matches:
+        command_dict = {'commands': [
+            param for param in parameter_matches if not param.startswith('wait=')]}
+        wait_value = [
+            param for param in parameter_matches if param.startswith('wait=')]
+        if wait_value:
+            command_dict['wait'] = int(wait_value[0].split('=')[1])
+        else:
+            command_dict['wait'] = 1  # デフォルト値
+        commands1.append(command_dict)
+
+print("最終的な commands1:", commands1)
 
 # シリアルポートの設定
 ser = serial.Serial(
@@ -132,8 +167,6 @@ conversion_rules = {
 
 # ここでser_lockを定義します（スレッド間のシリアルポート操作をロック）
 ser_lock = threading.Lock()
-
-# データを変換する関数を定義します
 
 
 def convert_commands(data, rules):
