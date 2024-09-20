@@ -152,7 +152,6 @@ ser = serial.Serial(
     timeout=3          # タイムアウト（秒）
 )
 
-
 # 変換のルールを定義します
 conversion_rules = {
     'motionstart': '^',
@@ -273,7 +272,7 @@ def send_data_thread(send_data):
                                 # 送信データをログに記録
                                 with open(get_log_file_path(), 'a') as log_file:
                                     log_file.write(
-                                        f"{get_current_timestamp()} 送信データ ): {send_bytes.decode('utf-8')}\n")
+                                        f"{get_current_timestamp()} 送信データ : {send_bytes.decode('utf-8')}\n")
                                     log_file.flush()  # バッファをフラッシュしてデータを書き込む
                         time.sleep(data['wait'])
             loop_count += 1  # ループカウントを増加

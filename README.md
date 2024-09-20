@@ -4,7 +4,9 @@ musclemota 動かすサンプルプログラム
 
 # インストール
 
-openai のインストールがまだの場合(update が必要な場合は必要に応じて行ってください）
+requirement.txtのコマンドを入力したらOKです。
+
+例:openai のインストールがまだの場合(update が必要な場合は必要に応じて行ってください）
 
     pip install openai
     pip install --upgrade openai
@@ -31,17 +33,20 @@ macOS および Linux の場合
 
     deactivate
 
-# Raspberry Pi で実行
+# ChatGPTに繋げて実行
 
-対象ディレクトリにて serial_communication.py を実行してください。
+対象ディレクトリにて main.py を実行してください。
 
-    python3 serial_communication.py
+    python3 main.py
 
-# Windows で実行
 
-    win.py
 
-を実行してください。
+# モータ単体で実行
+
+対象ディレクトリにて motor.py 実行してください。パラメータは自由に設定可能です。
+
+    motor.py
+
 
 # 接続情報について
 
@@ -53,7 +58,7 @@ macOS および Linux の場合
 
 # シリアルポートについて
 
-シリアルポートの設定は環境に合わせて変更してください。
+シリアルポートの設定は環境に合わせて変更してください。(.envで変更可能)
 
 Windows デフォルト
 

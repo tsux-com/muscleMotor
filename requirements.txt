@@ -3,3 +3,4 @@ pip install requests
 pip install openai
 pip install --upgrade openai
 pip install pyserial
+pip install python-dotenv
